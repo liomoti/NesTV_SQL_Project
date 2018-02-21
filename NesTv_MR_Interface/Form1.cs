@@ -149,29 +149,27 @@ namespace NesTv_MR_Interface
             bunifuCustomDataGrid1.DataSource = null;
             bunifuCustomDataGrid1.Rows.Clear();
             bunifuCustomDataGrid1.Refresh();
-            if (DevicesFlag)
+            if (DevicesFlag) //show all pressed
             {           
-                if (e.RowIndex > 0)
+                if (e.RowIndex >= 0)
                 {
-                    int index = int.Parse(DGV_NesTV.Rows[e.RowIndex].Cells[0].Value.ToString());
+                    int index = int.Parse(DGV_NesTV.Rows[e.RowIndex].Cells[0].Value.ToString());                    
                     //MessageBox.Show(DGV_NesTV.Rows[e.RowIndex].Cells[0].Value.ToString());
                     SqlConnection CON = new SqlConnection(conStr);
                     CON.Open();
                     SqlCommand com = new SqlCommand("SELECT tblCustomer.CustomerID, FirstName+' '+Surname as CustomerName, " +
                         "tblDevices.serialNum AS DeviceSerialNum " +
-                        "FROM tblCustomer left outer join tblDevices " +
+                        "FROM tblCustomer inner join tblDevices " +
                         "ON tblDevices.BelongsToCustomer = tblCustomer.CustomerId " +
                         "WHERE tblCustomer.CustomerID =" + index +
                         " GROUP BY tblCustomer.CustomerID,FirstName,Surname, serialNum ", CON);
                     try
                     {
-
                         SqlDataAdapter sda = new SqlDataAdapter();
                         sda.SelectCommand = com;
                         DataTable dbset = new DataTable();
                         sda.Fill(dbset);
                         BindingSource bsource = new BindingSource();
-
                         bsource.DataSource = dbset;
                         bunifuCustomDataGrid1.DataSource = bsource;
                         sda.Update(dbset);
@@ -182,8 +180,12 @@ namespace NesTv_MR_Interface
                     }
                     CON.Close();
                 }
-                if (bunifuCustomDataGrid1.DataSource == null)
+                if (bunifuCustomDataGrid1.DataSource == null || bunifuCustomDataGrid1.Rows.Count == 0)
+                {
                     lbldevices.Text = "No devices found for the selected customer";
+                    bunifuCustomDataGrid1.DataSource = null;
+                    bunifuCustomDataGrid1.Refresh();
+                }
                 else
                     lbldevices.Text = "The customer devices:";
             }
@@ -274,6 +276,11 @@ namespace NesTv_MR_Interface
                 MessageBox.Show(ex.Message);
             }
             CON.Close();
+        }
+
+        private void btn_exit_Click(object sender, EventArgs e)
+        {
+            this.Dispose();
         }
     }
 }
